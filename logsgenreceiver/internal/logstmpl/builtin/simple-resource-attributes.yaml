@@ -1,0 +1,18 @@
+resourceLogs:
+  - resource:
+      attributes:
+        - key: service.name
+          value:
+            stringValue: "service-{{.InstanceID}}"
+        - key: service.instance.id
+          value:
+            stringValue: "instance-{{.InstanceID}}"
+        - key: k8s.pod.name
+          value:
+            stringValue: "pod-{{.InstanceID}}"
+        - key: k8s.pod.uid
+          value:
+            stringValue: "{{.UUID}}"
+        - key: k8s.node.name
+          value:
+            stringValue: "ip-10-0-{{.Mod .InstanceID 3}}-0.eu-west-1.compute.internal"
