@@ -63,45 +63,45 @@ type ProfileCfg struct {
 type IPPoolCfg struct {
 	// CIDRs to draw IPs from. Each must be a valid IPv4 CIDR.
 	// Default: ["10.0.0.0/8"]
-	CIDRs []string `mapstructure:"cidrs"`
+	CIDRs []string `mapstructure:"cidrs" yaml:"cidrs"`
 	// ZipfSkew controls the Zipf distribution skew (s parameter).
 	// Higher values make fewer IPs dominate traffic. Must be > 1.0.
 	// Default: 1.5
-	ZipfSkew float64 `mapstructure:"zipf_skew"`
+	ZipfSkew float64 `mapstructure:"zipf_skew" yaml:"zipf_skew"`
 }
 
 type DiurnalProfileCfg struct {
-	PeakHour         int            `mapstructure:"peak_hour"`
-	TroughHour       int            `mapstructure:"trough_hour"`
-	PeakMultiplier   float64        `mapstructure:"peak_multiplier"`
-	TroughMultiplier float64        `mapstructure:"trough_multiplier"`
-	CronBursts       []CronBurstCfg `mapstructure:"cron_bursts"`
+	PeakHour         int            `mapstructure:"peak_hour" yaml:"peak_hour"`
+	TroughHour       int            `mapstructure:"trough_hour" yaml:"trough_hour"`
+	PeakMultiplier   float64        `mapstructure:"peak_multiplier" yaml:"peak_multiplier"`
+	TroughMultiplier float64        `mapstructure:"trough_multiplier" yaml:"trough_multiplier"`
+	CronBursts       []CronBurstCfg `mapstructure:"cron_bursts" yaml:"cron_bursts"`
 }
 
 type CronBurstCfg struct {
-	Interval   time.Duration `mapstructure:"interval"`
-	Multiplier float64       `mapstructure:"multiplier"`
-	Duration   time.Duration `mapstructure:"duration"`
+	Interval   time.Duration `mapstructure:"interval" yaml:"interval"`
+	Multiplier float64       `mapstructure:"multiplier" yaml:"multiplier"`
+	Duration   time.Duration `mapstructure:"duration" yaml:"duration"`
 }
 
 type VolumeProfileCfg struct {
-	BurstProbability   float64 `mapstructure:"burst_probability"`
-	BurstMultiplierMin float64 `mapstructure:"burst_multiplier_min"`
-	BurstMultiplierMax float64 `mapstructure:"burst_multiplier_max"`
-	BurstDurationMin   int     `mapstructure:"burst_duration_min"`
-	BurstDurationMax   int     `mapstructure:"burst_duration_max"`
-	QuietProbability   float64 `mapstructure:"quiet_probability"`
-	QuietMultiplier    float64 `mapstructure:"quiet_multiplier"`
-	QuietDurationMin   int     `mapstructure:"quiet_duration_min"`
-	QuietDurationMax   int     `mapstructure:"quiet_duration_max"`
+	BurstProbability   float64 `mapstructure:"burst_probability" yaml:"burst_probability"`
+	BurstMultiplierMin float64 `mapstructure:"burst_multiplier_min" yaml:"burst_multiplier_min"`
+	BurstMultiplierMax float64 `mapstructure:"burst_multiplier_max" yaml:"burst_multiplier_max"`
+	BurstDurationMin   int     `mapstructure:"burst_duration_min" yaml:"burst_duration_min"`
+	BurstDurationMax   int     `mapstructure:"burst_duration_max" yaml:"burst_duration_max"`
+	QuietProbability   float64 `mapstructure:"quiet_probability" yaml:"quiet_probability"`
+	QuietMultiplier    float64 `mapstructure:"quiet_multiplier" yaml:"quiet_multiplier"`
+	QuietDurationMin   int     `mapstructure:"quiet_duration_min" yaml:"quiet_duration_min"`
+	QuietDurationMax   int     `mapstructure:"quiet_duration_max" yaml:"quiet_duration_max"`
 }
 
 type NeedleCfg struct {
-	Name       string            `mapstructure:"name"`
-	Message    string            `mapstructure:"message"`
-	Rate       float64           `mapstructure:"rate"`
-	Severity   string            `mapstructure:"severity"`
-	Attributes map[string]string `mapstructure:"attributes"`
+	Name       string            `mapstructure:"name" yaml:"name"`
+	Message    string            `mapstructure:"message" yaml:"message"`
+	Rate       float64           `mapstructure:"rate" yaml:"rate"`
+	Severity   string            `mapstructure:"severity" yaml:"severity"`
+	Attributes map[string]string `mapstructure:"attributes" yaml:"attributes"`
 }
 
 func createDefaultConfig() component.Config {
