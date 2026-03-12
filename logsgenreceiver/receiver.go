@@ -522,6 +522,7 @@ func (r *LogsGenReceiver) Shutdown(_ context.Context) error {
 	if r.cancel != nil {
 		r.cancel()
 	}
+	<-r.done
 	needleCounts := make(map[string]uint64)
 	for name, cnt := range r.needleOccurrences {
 		if n := cnt.Load(); n > 0 {
