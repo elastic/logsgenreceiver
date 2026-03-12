@@ -24,6 +24,25 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, testdataConfigYamlAsMap(), cfg)
 }
 
+func TestLoadConfigWithProfile(t *testing.T) {
+	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config_with_profile.yaml"))
+	require.NoError(t, err)
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig().(*Config)
+	sub, err := cm.Sub("logsgen")
+	require.NoError(t, err)
+	require.NoError(t, sub.Unmarshal(cfg))
+
+	assert.NoError(t, xconfmap.Validate(cfg))
+	assert.Equal(t, "minimal", cfg.Profile)
+	assert.Empty(t, cfg.Scenarios)
+	effective := cfg.EffectiveScenarios()
+	require.Len(t, effective, 1)
+	assert.Equal(t, "builtin/simple", effective[0].Path)
+	assert.Equal(t, 10, effective[0].Scale)
+	assert.Equal(t, 5, effective[0].LogsPerInterval)
+}
+
 func testdataConfigYamlAsMap() *Config {
 	startTime, _ := time.Parse(time.RFC3339, "2024-12-17T00:00:00Z")
 	endTime, _ := time.Parse(time.RFC3339, "2024-12-17T00:00:31Z")
@@ -33,6 +52,7 @@ func testdataConfigYamlAsMap() *Config {
 		EndTime:   endTime,
 		Interval:  interval,
 		Seed:      123,
+		Profile:   "",
 		Scenarios: []ScenarioCfg{
 			{
 				Path:            "builtin/simple",
@@ -49,6 +69,9 @@ func validBaseConfig() *Config {
 		StartTime: start,
 		EndTime:   start.Add(10 * time.Second),
 		Interval:  1 * time.Second,
+		Scenarios: []ScenarioCfg{
+			{Path: "builtin/simple", Scale: 1, LogsPerInterval: 1},
+		},
 	}
 }
 
@@ -164,5 +187,60 @@ func TestValidateDiurnalProfile(t *testing.T) {
 				{Interval: 15 * time.Minute, Multiplier: 5.0, Duration: 15 * time.Minute},
 			},
 		}), "duration must be < interval")
+	})
+}
+
+func TestValidateProfileAndScenarios(t *testing.T) {
+	t.Run("unknown profile returns error", func(t *testing.T) {
+		cfg := validBaseConfig()
+		cfg.Scenarios = nil
+		cfg.Profile = "nonexistent-profile"
+		assert.ErrorContains(t, cfg.Validate(), "unknown profile")
+	})
+
+	t.Run("both profile and scenarios returns error", func(t *testing.T) {
+		cfg := validBaseConfig()
+		cfg.Profile = "minimal"
+		assert.ErrorContains(t, cfg.Validate(), "cannot set both profile and scenarios")
+	})
+
+	t.Run("neither profile nor scenarios returns error", func(t *testing.T) {
+		cfg := validBaseConfig()
+		cfg.Scenarios = nil
+		cfg.Profile = ""
+		assert.ErrorContains(t, cfg.Validate(), "must set either profile or scenarios")
+	})
+
+	t.Run("valid profile passes validation", func(t *testing.T) {
+		cfg := validBaseConfig()
+		cfg.Scenarios = nil
+		cfg.Profile = "minimal"
+		assert.NoError(t, cfg.Validate())
+	})
+
+	t.Run("valid inline scenarios passes validation", func(t *testing.T) {
+		cfg := validBaseConfig()
+		assert.NoError(t, cfg.Validate())
+	})
+}
+
+func TestEffectiveScenarios(t *testing.T) {
+	t.Run("returns inline scenarios when profile empty", func(t *testing.T) {
+		cfg := validBaseConfig()
+		effective := cfg.EffectiveScenarios()
+		require.Len(t, effective, 1)
+		assert.Equal(t, "builtin/simple", effective[0].Path)
+	})
+
+	t.Run("returns profile scenarios when profile set", func(t *testing.T) {
+		cfg := validBaseConfig()
+		cfg.Scenarios = nil
+		cfg.Profile = "minimal"
+		require.NoError(t, cfg.Validate())
+		effective := cfg.EffectiveScenarios()
+		require.Len(t, effective, 1)
+		assert.Equal(t, "builtin/simple", effective[0].Path)
+		assert.Equal(t, 10, effective[0].Scale)
+		assert.Equal(t, 5, effective[0].LogsPerInterval)
 	})
 }

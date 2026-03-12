@@ -179,10 +179,11 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 	}
 
 	baseRand := rand.New(rand.NewSource(cfg.Seed))
-
-	scenarios := make([]logScenario, 0, len(cfg.Scenarios))
+	effectiveScenarios := cfg.EffectiveScenarios()
+	scenarios := make([]logScenario, 0, len(effectiveScenarios))
 	needleNames := make(map[string]struct{})
-	for _, scn := range cfg.Scenarios {
+
+	for _, scn := range effectiveScenarios {
 		resources, err := logstmpl.GetLogResources(scn.Path, cfg.StartTime, scn.Scale, scn.TemplateVars, baseRand)
 		if err != nil {
 			return nil, err
@@ -229,7 +230,7 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 
 	totalConcurrentShards := 0
 	cardinalityShards := []int{0}
-	for _, scn := range cfg.Scenarios {
+	for _, scn := range effectiveScenarios {
 		if scn.Concurrency > 0 {
 			cardinalityShards = append(cardinalityShards, 1+totalConcurrentShards)
 			totalConcurrentShards += scn.Concurrency

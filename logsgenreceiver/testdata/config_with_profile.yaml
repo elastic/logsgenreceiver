@@ -1,0 +1,7 @@
+# Example: use a built-in profile by name (scenarios come from builtin/profiles.yaml)
+logsgen:
+  start_time: "2024-12-17T00:00:00Z"
+  end_time: "2024-12-17T00:00:31Z"
+  interval: 30s
+  seed: 456
+  profile: minimal

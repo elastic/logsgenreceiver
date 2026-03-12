@@ -11,3 +11,7 @@ status:
 tests:
   config:
     interval: 30000
+    scenarios:
+      - path: builtin/simple
+        scale: 1
+        logs_per_interval: 1

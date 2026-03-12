@@ -1,0 +1,141 @@
+# Built-in profiles: named scenario sets for common use cases.
+# Reference by name in config with profile: "profile-name".
+
+profiles:
+  - name: minimal
+    description: "Single simple source for quick tests"
+    scenarios:
+      - path: builtin/simple
+        scale: 10
+        logs_per_interval: 5
+
+  - name: k8s-stack
+    description: "Representative Kubernetes application stack with multiple services and realistic log volume distribution"
+    tags:
+      - k8s
+      - benchmark
+    scenarios:
+      # Nginx ingress controller — 4 pods/node on 30 nodes (43.7% of total volume)
+      - path: builtin/k8s-nginx
+        scale: 120                     # 30 nodes × 4 pods/node
+        logs_per_interval: 20          # base: 120 × 20 = 2,400/interval
+        concurrency: 4
+        instance_volume_skew: 1.5
+        template_vars:
+          nodes: 30
+          pods_per_node: 4
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 30
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+        needles:
+          - name: upstream_timeout
+            message: "upstream timed out (110: Connection timed out) while connecting to upstream"
+            rate: 0.0004
+            severity: ERROR
+            attributes:
+              error.type: "timeout"
+              upstream.host: "backend-svc:8080"
+
+      # MySQL database — StatefulSet on 10 nodes (2.4% of total volume)
+      - path: builtin/k8s-mysql
+        scale: 20                      # 10 nodes × 2 pods/node
+        logs_per_interval: 6           # base: 20 × 6 = 120/interval
+        concurrency: 1
+        template_vars:
+          nodes: 10
+          pods_per_node: 2
+        instance_volume_skew: 1.2
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+        needles:
+          - name: deadlock
+            message: "LATEST DETECTED DEADLOCK in transaction 0x7f2a1c003e80"
+            rate: 0.0005
+            severity: FATAL
+            attributes:
+              db.statement: "UPDATE orders SET status='processing' WHERE id=42"
+          - name: disk_full
+            message: "No space left on device writing to /var/lib/mysql/ibdata1"
+            rate: 0.0002
+            severity: FATAL
+
+      # Redis cache — ~5 pods/node on 10 nodes (1.5% of total volume)
+      - path: builtin/k8s-redis
+        scale: 50                      # 50 pods across 10 nodes (~5 pods/node)
+        logs_per_interval: 8           # base: 50 × 8 = 400/interval
+        instance_volume_skew: 1.02
+        concurrency: 2
+        template_vars:
+          nodes: 10
+
+      # Go microservices — 2 pods/node on 27 nodes (9.7% of total volume)
+      # 5 sub-services: api-gateway, user-service, order-service,
+      #   payment-service, notification-service
+      - path: builtin/k8s-goapp
+        scale: 54                      # 27 nodes × 2 pods/node
+        logs_per_interval: 10          # base: 54 × 10 = 540/interval
+        concurrency: 6
+        emit_trace_context: false
+        template_vars:
+          nodes: 27
+          pods_per_node: 2
+        instance_volume_skew: 1.8
+        needles:
+          - name: panic_recovery
+            message: '{"level":"fatal","ts":"2025-01-01T00:00:00Z","caller":"main.go:42","msg":"panic recovered","error":"runtime error: index out of range [5] with length 3","stacktrace":"goroutine 1 [running]:\nmain.handleRequest()"}'
+            rate: 0.0001
+            severity: FATAL
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+
+      # HTTP proxy / API gateway — 3 pods/node on 18 nodes (42.7% of total volume)
+      - path: builtin/k8s-proxy
+        scale: 54                      # 18 nodes × 3 pods/node
+        logs_per_interval: 40          # base: 54 × 40 = 2,160/interval
+        concurrency: 6
+        emit_trace_context: true
+        instance_volume_skew: 1.9
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+        template_vars:
+          nodes: 18
+          pods_per_node: 3
+        needles:
+          - name: upstream_unavailable
+            message: "no healthy upstream instances available"
+            rate: 0.001
+            severity: ERROR
+            attributes:
+              error.type: "upstream_unavailable"
+              status_reason: "NO_AVAILABLE_INSTANCES"
