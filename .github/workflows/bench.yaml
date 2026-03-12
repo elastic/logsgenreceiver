@@ -1,0 +1,129 @@
+name: Benchmark
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: bench-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    name: Benchmark Comparison
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'logsgenreceiver/go.mod'
+
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+
+      - name: Restore cached base benchmark
+        id: cache-base
+        uses: actions/cache/restore@v4
+        with:
+          path: bench-base.txt
+          key: bench-base-${{ github.event.pull_request.base.sha }}
+
+      - name: Benchmark base branch
+        if: steps.cache-base.outputs.cache-hit != 'true'
+        run: |
+          git checkout ${{ github.event.pull_request.base.sha }}
+          cd logsgenreceiver
+          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=5 -timeout=10m . \
+            | tee ../bench-base.txt
+
+      - name: Save base benchmark to cache
+        if: steps.cache-base.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: bench-base.txt
+          key: bench-base-${{ github.event.pull_request.base.sha }}
+
+      - name: Checkout PR HEAD
+        run: git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Benchmark PR HEAD
+        run: |
+          cd logsgenreceiver
+          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=5 -timeout=10m . \
+            | tee ../bench-head.txt
+
+      - name: Build comment body
+        id: comment
+        run: |
+          BENCHSTAT_OUT=$(benchstat bench-base.txt bench-head.txt 2>&1) || true
+
+          BASE_SHORT="${{ github.event.pull_request.base.sha }}"
+          BASE_SHORT="${BASE_SHORT:0:8}"
+          HEAD_SHORT="${{ github.event.pull_request.head.sha }}"
+          HEAD_SHORT="${HEAD_SHORT:0:8}"
+
+          CACHED_NOTE=""
+          if [ "${{ steps.cache-base.outputs.cache-hit }}" = "true" ]; then
+            CACHED_NOTE=" (cached)"
+          fi
+
+          RAW_BASE=$(cat bench-base.txt)
+          RAW_HEAD=$(cat bench-head.txt)
+
+          {
+            echo 'body<<BODY_DELIMITER'
+            echo "## Benchmark Results"
+            echo ""
+            echo "**Base:** \`${BASE_SHORT}\`${CACHED_NOTE} → **HEAD:** \`${HEAD_SHORT}\`"
+            echo ""
+            echo '```'
+            echo "$BENCHSTAT_OUT"
+            echo '```'
+            echo ""
+            echo "<details>"
+            echo "<summary>Raw base output</summary>"
+            echo ""
+            echo '```'
+            echo "$RAW_BASE"
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "<details>"
+            echo "<summary>Raw HEAD output</summary>"
+            echo ""
+            echo '```'
+            echo "$RAW_HEAD"
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+            echo "*Last updated for commit \`${HEAD_SHORT}\`*"
+            echo 'BODY_DELIMITER'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '## Benchmark Results'
+
+      - name: Post or update benchmark comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: ${{ steps.comment.outputs.body }}
