@@ -20,78 +20,87 @@ type Config struct {
 	ExitAfterEnd         bool          `mapstructure:"exit_after_end"`
 	ExitAfterEndTimeout  time.Duration `mapstructure:"exit_after_end_timeout"`
 	Seed                 int64         `mapstructure:"seed"`
+	Profile              string        `mapstructure:"profile"`
 	Scenarios            []ScenarioCfg `mapstructure:"scenarios"`
 }
 
 type ScenarioCfg struct {
-	Path             string            `mapstructure:"path"`
-	Scale            int               `mapstructure:"scale"`
-	Concurrency      int               `mapstructure:"concurrency"`
-	TemplateVars     map[string]any    `mapstructure:"template_vars"`
-	LogsPerInterval  int               `mapstructure:"logs_per_interval"`
-	EmitTraceContext bool              `mapstructure:"emit_trace_context"`
-	Needles          []NeedleCfg       `mapstructure:"needles"`
-	VolumeProfile    *VolumeProfileCfg `mapstructure:"volume_profile"`
-	DiurnalProfile   *DiurnalProfileCfg `mapstructure:"diurnal_profile"`
+	Path             string             `mapstructure:"path" yaml:"path"`
+	Scale            int                `mapstructure:"scale" yaml:"scale"`
+	Concurrency      int                `mapstructure:"concurrency" yaml:"concurrency"`
+	TemplateVars     map[string]any     `mapstructure:"template_vars" yaml:"template_vars"`
+	LogsPerInterval  int                `mapstructure:"logs_per_interval" yaml:"logs_per_interval"`
+	EmitTraceContext bool               `mapstructure:"emit_trace_context" yaml:"emit_trace_context"`
+	Needles          []NeedleCfg        `mapstructure:"needles" yaml:"needles"`
+	VolumeProfile    *VolumeProfileCfg  `mapstructure:"volume_profile" yaml:"volume_profile"`
+	DiurnalProfile   *DiurnalProfileCfg `mapstructure:"diurnal_profile" yaml:"diurnal_profile"`
 	// SeverityWeights overrides the profile's default severity distribution.
 	// Cumulative percentages for [TRACE, DEBUG, INFO, WARN, ERROR, FATAL].
 	// e.g. [0, 3, 85, 93, 100, 100] = 0% TRACE, 3% DEBUG, 82% INFO, 8% WARN, 7% ERROR, 0% FATAL.
 	// If nil or all zeros, the profile default is used.
-	SeverityWeights *[6]int `mapstructure:"severity_weights"`
+	SeverityWeights *[6]int `mapstructure:"severity_weights" yaml:"severity_weights"`
 	// IPPool configures the IP address pool used for generating net.peer.ip and similar fields.
 	// When nil, defaults are used: CIDRs=["10.0.0.0/8"], pool size=scale*10, zipf_skew=1.5.
-	IPPool *IPPoolCfg `mapstructure:"ip_pool"`
+	IPPool *IPPoolCfg `mapstructure:"ip_pool" yaml:"ip_pool"`
 	// InstanceVolumeSkew applies a log-normal distribution to per-instance log counts.
 	// The value is the sigma (standard deviation) of the underlying normal distribution.
 	// Higher values produce wider spread: 0 = flat (all instances equal),
 	// 1.0 = moderate variation (~0.3x to ~3x), 1.5 = wide (~0.1x to ~5x).
 	// Multipliers are computed once at init from the global seed, so output is deterministic.
 	// The mean multiplier is normalized to 1.0, preserving total volume.
-	InstanceVolumeSkew float64 `mapstructure:"instance_volume_skew"`
+	InstanceVolumeSkew float64 `mapstructure:"instance_volume_skew" yaml:"instance_volume_skew"`
+}
+
+// ProfileCfg defines a named set of scenarios with optional metadata.
+// Built-in profiles are loaded from embedded YAML; use Config.Profile to select one by name.
+type ProfileCfg struct {
+	Name        string        `mapstructure:"name" yaml:"name"`
+	Description string        `mapstructure:"description" yaml:"description"`
+	Scenarios   []ScenarioCfg `mapstructure:"scenarios" yaml:"scenarios"`
 }
 
 type IPPoolCfg struct {
 	// CIDRs to draw IPs from. Each must be a valid IPv4 CIDR.
 	// Default: ["10.0.0.0/8"]
-	CIDRs []string `mapstructure:"cidrs"`
+	CIDRs []string `mapstructure:"cidrs" yaml:"cidrs"`
 	// ZipfSkew controls the Zipf distribution skew (s parameter).
 	// Higher values make fewer IPs dominate traffic. Must be > 1.0.
 	// Default: 1.5
-	ZipfSkew float64 `mapstructure:"zipf_skew"`
+	ZipfSkew float64 `mapstructure:"zipf_skew" yaml:"zipf_skew"`
 }
 
 type DiurnalProfileCfg struct {
-	PeakHour         int            `mapstructure:"peak_hour"`
-	TroughHour       int            `mapstructure:"trough_hour"`
-	PeakMultiplier   float64        `mapstructure:"peak_multiplier"`
-	TroughMultiplier float64        `mapstructure:"trough_multiplier"`
-	CronBursts       []CronBurstCfg `mapstructure:"cron_bursts"`
+	PeakHour         int            `mapstructure:"peak_hour" yaml:"peak_hour"`
+	TroughHour       int            `mapstructure:"trough_hour" yaml:"trough_hour"`
+	PeakMultiplier   float64        `mapstructure:"peak_multiplier" yaml:"peak_multiplier"`
+	TroughMultiplier float64        `mapstructure:"trough_multiplier" yaml:"trough_multiplier"`
+	CronBursts       []CronBurstCfg `mapstructure:"cron_bursts" yaml:"cron_bursts"`
 }
 
 type CronBurstCfg struct {
-	Interval   time.Duration `mapstructure:"interval"`
-	Multiplier float64       `mapstructure:"multiplier"`
-	Duration   time.Duration `mapstructure:"duration"`
+	Interval   time.Duration `mapstructure:"interval" yaml:"interval"`
+	Multiplier float64       `mapstructure:"multiplier" yaml:"multiplier"`
+	Duration   time.Duration `mapstructure:"duration" yaml:"duration"`
 }
 
 type VolumeProfileCfg struct {
-	BurstProbability   float64 `mapstructure:"burst_probability"`
-	BurstMultiplierMin float64 `mapstructure:"burst_multiplier_min"`
-	BurstMultiplierMax float64 `mapstructure:"burst_multiplier_max"`
-	BurstDurationMin   int     `mapstructure:"burst_duration_min"`
-	BurstDurationMax   int     `mapstructure:"burst_duration_max"`
-	QuietProbability   float64 `mapstructure:"quiet_probability"`
-	QuietMultiplier    float64 `mapstructure:"quiet_multiplier"`
-	QuietDurationMin   int     `mapstructure:"quiet_duration_min"`
-	QuietDurationMax   int     `mapstructure:"quiet_duration_max"`
+	BurstProbability   float64 `mapstructure:"burst_probability" yaml:"burst_probability"`
+	BurstMultiplierMin float64 `mapstructure:"burst_multiplier_min" yaml:"burst_multiplier_min"`
+	BurstMultiplierMax float64 `mapstructure:"burst_multiplier_max" yaml:"burst_multiplier_max"`
+	BurstDurationMin   int     `mapstructure:"burst_duration_min" yaml:"burst_duration_min"`
+	BurstDurationMax   int     `mapstructure:"burst_duration_max" yaml:"burst_duration_max"`
+	QuietProbability   float64 `mapstructure:"quiet_probability" yaml:"quiet_probability"`
+	QuietMultiplier    float64 `mapstructure:"quiet_multiplier" yaml:"quiet_multiplier"`
+	QuietDurationMin   int     `mapstructure:"quiet_duration_min" yaml:"quiet_duration_min"`
+	QuietDurationMax   int     `mapstructure:"quiet_duration_max" yaml:"quiet_duration_max"`
 }
 
 type NeedleCfg struct {
-	Name       string            `mapstructure:"name"`
-	Message    string            `mapstructure:"message"`
-	Rate       float64           `mapstructure:"rate"`
-	Severity   string            `mapstructure:"severity"`
-	Attributes map[string]string `mapstructure:"attributes"`
+	Name       string            `mapstructure:"name" yaml:"name"`
+	Message    string            `mapstructure:"message" yaml:"message"`
+	Rate       float64           `mapstructure:"rate" yaml:"rate"`
+	Severity   string            `mapstructure:"severity" yaml:"severity"`
+	Attributes map[string]string `mapstructure:"attributes" yaml:"attributes"`
 }
 
 func createDefaultConfig() component.Config {
@@ -110,7 +119,43 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("start_time must be before end_time")
 	}
 
-	for _, scn := range cfg.Scenarios {
+	hasProfile := cfg.Profile != ""
+	hasScenarios := len(cfg.Scenarios) > 0
+	if hasProfile && hasScenarios {
+		return fmt.Errorf("cannot set both profile and scenarios; use one or the other")
+	}
+	if !hasProfile && !hasScenarios {
+		return fmt.Errorf("must set either profile or scenarios")
+	}
+
+	if hasProfile {
+		prof, ok := getBuiltinProfile(cfg.Profile)
+		if !ok {
+			return fmt.Errorf("unknown profile %q", cfg.Profile)
+		}
+		if len(prof.Scenarios) == 0 {
+			return fmt.Errorf("profile %q has no scenarios", cfg.Profile)
+		}
+		return validateScenarios(prof.Scenarios)
+	}
+
+	return validateScenarios(cfg.Scenarios)
+}
+
+// EffectiveScenarios returns the scenarios to use: either from the selected built-in profile or from Config.Scenarios.
+// Call after Validate() so the selected profile is guaranteed to exist when Profile is set.
+func (cfg *Config) EffectiveScenarios() []ScenarioCfg {
+	if cfg.Profile != "" {
+		if prof, ok := getBuiltinProfile(cfg.Profile); ok {
+			return prof.Scenarios
+		}
+	}
+
+	return cfg.Scenarios
+}
+
+func validateScenarios(scenarios []ScenarioCfg) error {
+	for _, scn := range scenarios {
 		if scn.Scale < 0 {
 			return fmt.Errorf("scenarios: scale must be non-negative")
 		}
