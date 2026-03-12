@@ -9,11 +9,8 @@ profiles:
         scale: 10
         logs_per_interval: 5
 
-  - name: k8s-stack
+  - name: k8s-medium-multiapp
     description: "Representative Kubernetes application stack with multiple services and realistic log volume distribution"
-    tags:
-      - k8s
-      - benchmark
     scenarios:
       # Nginx ingress controller — 4 pods/node on 30 nodes (43.7% of total volume)
       - path: builtin/k8s-nginx

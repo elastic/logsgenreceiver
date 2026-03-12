@@ -84,7 +84,6 @@ func TestProfileYAMLUnmarshal_AllScenarioAttributes(t *testing.T) {
 	// Profile metadata
 	assert.Equal(t, "full-scenario-attrs", prof.Name)
 	assert.Equal(t, "Profile used to verify all scenario fields unmarshal", prof.Description)
-	assert.Equal(t, []string{"test", "coverage"}, prof.Tags)
 
 	// Scenario top-level
 	assert.Equal(t, "builtin/k8s-nginx", scn.Path)
@@ -162,17 +161,17 @@ func toInt64(v any) int64 {
 func TestProfileYAMLUnmarshal_BuiltinProfileK8sStack_NeedlesAndNestedAttrs(t *testing.T) {
 	// Load real built-in profile and assert nested attributes (needles, volume_profile, etc.)
 	// are present so we don't rely only on synthetic YAML.
-	prof, ok := getBuiltinProfile("k8s-stack")
+	prof, ok := getBuiltinProfile("k8s-medium-multiapp")
 	require.True(t, ok)
 	require.NotEmpty(t, prof.Scenarios)
 
 	// First scenario (nginx) has needles and volume_profile in builtin/profiles.yaml
 	scn := &prof.Scenarios[0]
 	assert.Equal(t, "builtin/k8s-nginx", scn.Path)
-	require.NotNil(t, scn.VolumeProfile, "k8s-stack nginx scenario should have volume_profile")
+	require.NotNil(t, scn.VolumeProfile, "k8s-medium-multiapp nginx scenario should have volume_profile")
 	assert.Greater(t, scn.VolumeProfile.BurstProbability, 0.0)
 	assert.Greater(t, scn.VolumeProfile.BurstMultiplierMin, 0.0)
-	require.NotEmpty(t, scn.Needles, "k8s-stack nginx scenario should have needles")
+	require.NotEmpty(t, scn.Needles, "k8s-medium-multiapp nginx scenario should have needles")
 	assert.Equal(t, "upstream_timeout", scn.Needles[0].Name)
 	assert.Equal(t, "ERROR", scn.Needles[0].Severity)
 	assert.Contains(t, scn.Needles[0].Message, "upstream timed out")

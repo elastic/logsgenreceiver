@@ -56,7 +56,6 @@ type ScenarioCfg struct {
 type ProfileCfg struct {
 	Name        string        `mapstructure:"name" yaml:"name"`
 	Description string        `mapstructure:"description" yaml:"description"`
-	Tags        []string      `mapstructure:"tags" yaml:"tags"`
 	Scenarios   []ScenarioCfg `mapstructure:"scenarios" yaml:"scenarios"`
 }
 
