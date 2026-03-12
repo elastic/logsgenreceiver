@@ -1,0 +1,26 @@
+dist:
+  name: logsgen
+  description: Custom OTel Collector distribution
+  output_path: ./logsgen-dev
+
+exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.139.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.139.0
+  - gomod: go.opentelemetry.io/collector/exporter/nopexporter v0.139.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.139.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.139.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/elasticsearchexporter v0.139.0
+
+processors:
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.139.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.139.0
+
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.139.0
+  - gomod: github.com/elastic/logsgenreceiver/logsgenreceiver v0.139.0
+    import: github.com/elastic/logsgenreceiver/logsgenreceiver
+    name: 'logsgenreceiver'
+    path: 'logsgenreceiver'
+
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.139.0

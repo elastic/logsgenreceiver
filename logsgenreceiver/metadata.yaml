@@ -1,0 +1,13 @@
+type: logsgen
+
+status:
+  class: receiver
+  stability:
+    development: [logs]
+  distributions: [contrib]
+  codeowners:
+    active: [alexsapran]
+
+tests:
+  config:
+    interval: 30000
