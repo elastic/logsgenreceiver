@@ -242,6 +242,9 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 	}
 	stats := logstats.NewShardedLogStats(numShards, cardinalityShards)
 
+	done := make(chan struct{})
+	close(done) // pre-close so Shutdown doesn't block if Start was never called
+
 	return &LogsGenReceiver{
 		cfg:               cfg,
 		settings:          set,
@@ -251,13 +254,14 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 		progress:          newLogsProgress(),
 		needleOccurrences: needleOccurrences,
 		stats:             stats,
-		done:              make(chan struct{}),
+		done:              done,
 	}, nil
 }
 
 func (r *LogsGenReceiver) Start(ctx context.Context, host component.Host) error {
 	ctx, cancel := context.WithCancel(ctx)
 	r.cancel = cancel
+	r.done = make(chan struct{}) // reset to unclosed channel
 	go func() {
 		defer close(r.done)
 		nextLog := r.progress.start.Add(10 * time.Second)
