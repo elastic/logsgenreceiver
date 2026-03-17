@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
-
 const proxyPoolSize = 4096
 
 // proxyLogNormalPool pre-generates log-normally distributed ints.
@@ -220,7 +219,9 @@ func ProxyProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 	uuidGen := RandomUUID
 
 	staticPathGen := proxyWeightedStrPool(rng, []weightedStr{
-		{"/_bulk", 180}, {"/_security/_authenticate", 124}, {"/", 66},
+		{"/_bulk", 180},
+		{"/_security/_authenticate", 124},
+		{"/", 66},
 		{"/_security/user/_has_privileges", 54},
 		{"/.sysidx_task_manager/_msearch", 45},
 		{"/.sysidx_task_manager/_search", 31},
@@ -229,21 +230,30 @@ func ProxyProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 		{"/.sysidx_ingest/_search", 17},
 		{"/.sysidx_task_manager_v2/_search", 13},
 		{"/.sysidx_task_manager/_bulk", 13},
-		{"/_tasks", 11}, {"/.sysidx_config/_search", 9},
-		{"/_xpack", 8}, {"/_mget", 8},
-		{"/_cluster/health", 8}, {"/_cluster/state/master_node", 8},
-		{"/_resolve/index/*", 8}, {"/_cat/shards", 8},
+		{"/_tasks", 11},
+		{"/.sysidx_config/_search", 9},
+		{"/_xpack", 8},
+		{"/_mget", 8},
+		{"/_cluster/health", 8},
+		{"/_cluster/state/master_node", 8},
+		{"/_resolve/index/*", 8},
+		{"/_cat/shards", 8},
 		{"/_nodes/stats/breaker,fs,http,indices,jvm,os,process,thread_pool,transport", 8},
 		{"/.sysidx_config/_doc/config:default", 8},
-		{"/_search", 7}, {"/.sysidx_task_manager/_mget", 6},
-		{"/_pit", 6}, {"/_health", 6},
-		{"/_cluster/settings", 5}, {"/intake/v2/events", 4},
+		{"/_search", 7},
+		{"/.sysidx_task_manager/_mget", 6},
+		{"/_pit", 6},
+		{"/_health", 6},
+		{"/_cluster/settings", 5},
+		{"/intake/v2/events", 4},
 		{"/.ds-logs-generic-default/_bulk", 20},
 		{"/.ds-metrics-generic-default/_bulk", 15},
 		{"/.ds-traces-generic-default/_bulk", 10},
 		{"/_ml/anomaly_detectors/_stats", 3},
-		{"/_alias", 3}, {"/_mapping", 3},
-		{"/_index_template", 2}, {"/_ingest/pipeline", 2},
+		{"/_alias", 3},
+		{"/_mapping", 3},
+		{"/_index_template", 2},
+		{"/_ingest/pipeline", 2},
 	})
 
 	// Dynamic path pool: pre-generate ~8000 unique paths from templates with IDs
@@ -322,17 +332,37 @@ func ProxyProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 	})
 
 	statusGen := proxyWeightedIntPool(rng, []weightedInt{
-		{200, 8540}, {404, 350}, {202, 42}, {429, 37},
-		{201, 28}, {409, 15}, {401, 12}, {400, 8},
-		{302, 4}, {503, 3}, {304, 1},
+		{200, 8540},
+		{404, 350},
+		{202, 42},
+		{429, 37},
+		{201, 28},
+		{409, 15},
+		{401, 12},
+		{400, 8},
+		{302, 4},
+		{503, 3},
+		{304, 1},
 	})
 
 	actionGen := proxyWeightedStrPool(rng, []weightedStr{
-		{"bulk", 194}, {"search", 180}, {"security", 179}, {"other", 161},
-		{"get", 83}, {"nodes", 26}, {"index", 25}, {"cluster", 21},
-		{"tasks", 11}, {"xpack", 8}, {"cat", 8},
-		{"exists/index", 2}, {"metadata", 2}, {"ml", 1}, {"head", 1},
-		{"ingest", 1}, {"refresh", 1},
+		{"bulk", 194},
+		{"search", 180},
+		{"security", 179},
+		{"other", 161},
+		{"get", 83},
+		{"nodes", 26},
+		{"index", 25},
+		{"cluster", 21},
+		{"tasks", 11},
+		{"xpack", 8},
+		{"cat", 8},
+		{"exists/index", 2},
+		{"metadata", 2},
+		{"ml", 1},
+		{"head", 1},
+		{"ingest", 1},
+		{"refresh", 1},
 	})
 
 	routingDecGen := proxyWeightedStrPool(rng, []weightedStr{
@@ -352,8 +382,11 @@ func ProxyProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 	})
 
 	statusReasonGen := proxyWeightedStrPool(rng, []weightedStr{
-		{"-", 9950}, {"INITIALIZING", 40}, {"RESOURCE_NOT_FOUND", 5},
-		{"CLIENT_CLOSED_CONNECTION", 3}, {"NO_AVAILABLE_INSTANCES", 2},
+		{"-", 9950},
+		{"INITIALIZING", 40},
+		{"RESOURCE_NOT_FOUND", 5},
+		{"CLIENT_CLOSED_CONNECTION", 3},
+		{"NO_AVAILABLE_INSTANCES", 2},
 	})
 
 	serverlessTypeGen := proxyWeightedStrPool(rng, []weightedStr{

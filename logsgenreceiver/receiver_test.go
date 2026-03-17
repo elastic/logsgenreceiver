@@ -161,7 +161,7 @@ func TestLogsGenReceiver_ExternalTemplate(t *testing.T) {
         logRecords: []
 `
 	templatePath := filepath.Join(dir, "custom-resource-attributes.yaml")
-	require.NoError(t, os.WriteFile(templatePath, []byte(resourceAttrs), 0600))
+	require.NoError(t, os.WriteFile(templatePath, []byte(resourceAttrs), 0o600))
 
 	startTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	cfg := &Config{

@@ -13,10 +13,12 @@ type LongTailField struct {
 	Threshold int64    // emit when rng.Int63n(longTailDenominator) < threshold
 }
 
-const longTailPoolBits = 8 // pool size = 256
-const longTailPoolSize = 1 << longTailPoolBits
-const longTailPoolMask = longTailPoolSize - 1
-const longTailDenominator = 10000 // probability denominator (threshold 50 = 0.5%)
+const (
+	longTailPoolBits    = 8 // pool size = 256
+	longTailPoolSize    = 1 << longTailPoolBits
+	longTailPoolMask    = longTailPoolSize - 1
+	longTailDenominator = 10000 // probability denominator (threshold 50 = 0.5%)
+)
 
 // LongTailSet is a pre-computed batch of long-tail fields. The hot path
 // uses a pre-generated schedule of firing positions to avoid per-field
@@ -31,8 +33,10 @@ type scheduleEntry struct {
 	poolIdx  int
 }
 
-const longTailScheduleSize = 65536
-const longTailScheduleMask = longTailScheduleSize - 1
+const (
+	longTailScheduleSize = 65536
+	longTailScheduleMask = longTailScheduleSize - 1
+)
 
 // buildStrPool creates a pool of string values from choices.
 func buildStrPool(rng *rand.Rand, choices []string) []string {

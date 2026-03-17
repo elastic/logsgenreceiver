@@ -110,7 +110,7 @@ func TestRenderLogsTemplate_ExternalPath(t *testing.T) {
         logRecords: []
 `
 	templatePath := filepath.Join(dir, "custom-resource-attributes.yaml")
-	require.NoError(t, os.WriteFile(templatePath, []byte(templateContent), 0600))
+	require.NoError(t, os.WriteFile(templatePath, []byte(templateContent), 0o600))
 
 	path := filepath.Join(dir, "custom")
 	model := &resourceTemplateModel{InstanceID: 3, rand: rand.New(rand.NewSource(1))}
@@ -141,7 +141,7 @@ func TestGetLogResources_ExternalPath(t *testing.T) {
         logRecords: []
 `
 	templatePath := filepath.Join(dir, "mytemplate-resource-attributes.yaml")
-	require.NoError(t, os.WriteFile(templatePath, []byte(templateContent), 0600))
+	require.NoError(t, os.WriteFile(templatePath, []byte(templateContent), 0o600))
 
 	path := filepath.Join(dir, "mytemplate")
 	startTime := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)

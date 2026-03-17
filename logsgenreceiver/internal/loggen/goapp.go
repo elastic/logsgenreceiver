@@ -6,13 +6,15 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
-var goAppHTTPMethods = []string{"GET", "POST", "PUT", "DELETE", "PATCH"}
-var goAppPaths = []string{"/api/v1/users", "/api/v1/orders", "/api/v1/products", "/health", "/metrics"}
-var goAppServices = []string{"user-service", "order-service", "payment-service", "notification-service"}
-var goAppGrpcMethods = []string{"GetUser", "CreateOrder", "ProcessPayment", "SendNotification"}
-var goAppQueues = []string{"orders", "notifications", "emails", "jobs"}
-var goAppErrors = []string{"connection refused", "timeout", "context deadline exceeded", "connection reset by peer"}
-var goAppDbHosts = []string{"mysql-primary:3306", "postgres:5432", "localhost:5432"}
+var (
+	goAppHTTPMethods = []string{"GET", "POST", "PUT", "DELETE", "PATCH"}
+	goAppPaths       = []string{"/api/v1/users", "/api/v1/orders", "/api/v1/products", "/health", "/metrics"}
+	goAppServices    = []string{"user-service", "order-service", "payment-service", "notification-service"}
+	goAppGrpcMethods = []string{"GetUser", "CreateOrder", "ProcessPayment", "SendNotification"}
+	goAppQueues      = []string{"orders", "notifications", "emails", "jobs"}
+	goAppErrors      = []string{"connection refused", "timeout", "context deadline exceeded", "connection reset by peer"}
+	goAppDbHosts     = []string{"mysql-primary:3306", "postgres:5432", "localhost:5432"}
+)
 
 func GoAppProfile(rng *rand.Rand) *AppProfile {
 	if rng == nil {

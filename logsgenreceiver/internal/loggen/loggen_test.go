@@ -87,7 +87,7 @@ func TestParseSeverity(t *testing.T) {
 	assert.Equal(t, plog.SeverityNumberWarn, ParseSeverity("WARN"))
 	assert.Equal(t, plog.SeverityNumberError, ParseSeverity("ERROR"))
 	assert.Equal(t, plog.SeverityNumberFatal, ParseSeverity("FATAL"))
-	assert.Equal(t, plog.SeverityNumberError, ParseSeverity(""))      // default
+	assert.Equal(t, plog.SeverityNumberError, ParseSeverity(""))        // default
 	assert.Equal(t, plog.SeverityNumberError, ParseSeverity("unknown")) // default
 }
 

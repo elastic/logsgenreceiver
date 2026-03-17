@@ -63,11 +63,11 @@ func nginxAccessLogs(rng *rand.Rand, ipCfg *IPPoolConfig) []MessageTemplate {
 	routeGen := RouteWithRandomID(nginxRouteTemplates)
 	return []MessageTemplate{
 		{
-			Severity:     plog.SeverityNumberInfo,
-			Format:       "%s - - [%s] \"GET %s HTTP/1.1\" %d %d \"-\" \"%s\"",
-			Args:         []ArgGenerator{zipfIP, Timestamp(tsLayout), routeGen, RandomHTTPStatus, RandomBytes, RandomUserAgent},
-			AttrFromArg:  map[string]int{"net.peer.ip": 0, "http.status_code": 3, "http.url": 2, "http.response.body.size": 4, "user_agent.original": 5},
-			Attrs:        []AttrGen{{"http.method", Static("GET")}, {"http.flavor", RandomFrom("1.1", "2.0")}},
+			Severity:    plog.SeverityNumberInfo,
+			Format:      "%s - - [%s] \"GET %s HTTP/1.1\" %d %d \"-\" \"%s\"",
+			Args:        []ArgGenerator{zipfIP, Timestamp(tsLayout), routeGen, RandomHTTPStatus, RandomBytes, RandomUserAgent},
+			AttrFromArg: map[string]int{"net.peer.ip": 0, "http.status_code": 3, "http.url": 2, "http.response.body.size": 4, "user_agent.original": 5},
+			Attrs:       []AttrGen{{"http.method", Static("GET")}, {"http.flavor", RandomFrom("1.1", "2.0")}},
 		},
 		{
 			Severity: plog.SeverityNumberInfo,
@@ -83,11 +83,11 @@ func nginxAccessLogs(rng *rand.Rand, ipCfg *IPPoolConfig) []MessageTemplate {
 			Attrs:       []AttrGen{{"http.method", Static("POST")}, {"http.request.body.size", RandomInt(0, 50000)}},
 		},
 		{
-			Severity:     plog.SeverityNumberInfo,
-			Format:       "%s - - [%s] \"GET /health HTTP/1.1\" 200 15 \"-\" \"kube-probe/1.28\"",
-			Args:         []ArgGenerator{zipfIP, Timestamp(tsLayout)},
-			AttrFromArg:  map[string]int{"net.peer.ip": 0},
-			Attrs:        []AttrGen{{"http.method", Static("GET")}, {"http.status_code", HTTPStatus(200)}, {"http.url", Static("/health")}},
+			Severity:    plog.SeverityNumberInfo,
+			Format:      "%s - - [%s] \"GET /health HTTP/1.1\" 200 15 \"-\" \"kube-probe/1.28\"",
+			Args:        []ArgGenerator{zipfIP, Timestamp(tsLayout)},
+			AttrFromArg: map[string]int{"net.peer.ip": 0},
+			Attrs:       []AttrGen{{"http.method", Static("GET")}, {"http.status_code", HTTPStatus(200)}, {"http.url", Static("/health")}},
 		},
 		{
 			Severity:    plog.SeverityNumberInfo,

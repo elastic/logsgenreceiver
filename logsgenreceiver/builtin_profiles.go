@@ -60,13 +60,16 @@ func loadBuiltinProfiles() (map[string]*ProfileCfg, error) {
 	return builtinProfiles, builtinProfilesErr
 }
 
-// getBuiltinProfile returns the built-in profile with the given name, or (nil, false) if not found.
-// Built-in profiles are loaded from the embedded profiles.yaml on first call.
-func getBuiltinProfile(name string) (*ProfileCfg, bool) {
+// getBuiltinProfile returns the built-in profile with the given name.
+// Returns an error if the embedded profiles failed to load, or (nil, nil) if not found.
+func getBuiltinProfile(name string) (*ProfileCfg, error) {
 	profiles, err := loadBuiltinProfiles()
-	if err != nil || profiles == nil {
-		return nil, false
+	if err != nil {
+		return nil, fmt.Errorf("loading built-in profiles: %w", err)
 	}
-	p, ok := profiles[name]
-	return p, ok
+	if profiles == nil {
+		return nil, fmt.Errorf("built-in profiles not initialized")
+	}
+	p := profiles[name]
+	return p, nil
 }

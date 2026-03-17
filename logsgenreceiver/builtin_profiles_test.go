@@ -16,9 +16,6 @@ const profileYAMLWithAllScenarioAttributes = `
 profiles:
   - name: full-scenario-attrs
     description: "Profile used to verify all scenario fields unmarshal"
-    tags:
-      - test
-      - coverage
     scenarios:
       - path: builtin/k8s-nginx
         scale: 42
@@ -161,8 +158,9 @@ func toInt64(v any) int64 {
 func TestProfileYAMLUnmarshal_BuiltinProfileK8sStack_NeedlesAndNestedAttrs(t *testing.T) {
 	// Load real built-in profile and assert nested attributes (needles, volume_profile, etc.)
 	// are present so we don't rely only on synthetic YAML.
-	prof, ok := getBuiltinProfile("k8s-medium-multiapp")
-	require.True(t, ok)
+	prof, err := getBuiltinProfile("k8s-medium-multiapp")
+	require.NoError(t, err)
+	require.NotNil(t, prof)
 	require.NotEmpty(t, prof.Scenarios)
 
 	// First scenario (nginx) has needles and volume_profile in builtin/profiles.yaml

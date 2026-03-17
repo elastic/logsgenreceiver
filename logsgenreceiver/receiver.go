@@ -32,6 +32,7 @@ type LogsGenReceiver struct {
 
 	baseRand          *rand.Rand
 	nextLogs          consumer.Logs
+	mu                sync.Mutex
 	cancel            context.CancelFunc
 	scenarios         []logScenario
 	progress          *logsProgress
@@ -179,7 +180,13 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 	}
 
 	baseRand := rand.New(rand.NewSource(cfg.Seed))
-	effectiveScenarios := cfg.EffectiveScenarios()
+	effectiveScenarios, err := cfg.EffectiveScenarios()
+	if err != nil {
+		return nil, fmt.Errorf("resolving scenarios: %w", err)
+	}
+	for i := range effectiveScenarios {
+		applyDiurnalDefaults(effectiveScenarios[i].DiurnalProfile)
+	}
 	scenarios := make([]logScenario, 0, len(effectiveScenarios))
 	needleNames := make(map[string]struct{})
 
@@ -259,11 +266,14 @@ func newLogsGenReceiver(cfg *Config, set receiver.Settings) (*LogsGenReceiver, e
 }
 
 func (r *LogsGenReceiver) Start(ctx context.Context, host component.Host) error {
+	r.mu.Lock()
 	ctx, cancel := context.WithCancel(ctx)
 	r.cancel = cancel
-	r.done = make(chan struct{}) // reset to unclosed channel
+	r.done = make(chan struct{})
+	done := r.done
+	r.mu.Unlock()
 	go func() {
-		defer close(r.done)
+		defer close(done)
 		nextLog := r.progress.start.Add(10 * time.Second)
 		ticker := time.NewTicker(r.cfg.Interval)
 		defer ticker.Stop()
@@ -390,6 +400,9 @@ func (r *LogsGenReceiver) produceLogs(ctx context.Context, currentTime time.Time
 				batch := plog.NewLogs()
 				for j := 0; j < scale/concurrency; j++ {
 					idx := j + wi*scale/concurrency
+					if idx >= len(scenario.resources) {
+						continue
+					}
 					instanceLogs := applyInstanceMultiplier(logs, scenario.instanceMultipliers, idx)
 					if instanceLogs <= 0 {
 						continue
@@ -521,10 +534,14 @@ func anyToString(v any) string {
 }
 
 func (r *LogsGenReceiver) Shutdown(_ context.Context) error {
-	if r.cancel != nil {
-		r.cancel()
+	r.mu.Lock()
+	cancel := r.cancel
+	done := r.done
+	r.mu.Unlock()
+	if cancel != nil {
+		cancel()
 	}
-	<-r.done
+	<-done
 	needleCounts := make(map[string]uint64)
 	for name, cnt := range r.needleOccurrences {
 		if n := cnt.Load(); n > 0 {

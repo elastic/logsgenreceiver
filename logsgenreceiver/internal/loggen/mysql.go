@@ -6,10 +6,12 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
-var mysqlDBNames = []string{"orders", "users", "products", "analytics", "auth", "main"}
-var mysqlUsers = []string{"app_user", "replicator", "admin", "root", "migration"}
-var mysqlTables = []string{"users", "orders", "products", "sessions", "audit_log"}
-var mysqlColumns = []string{"id", "user_id", "email", "status", "created_at"}
+var (
+	mysqlDBNames = []string{"orders", "users", "products", "analytics", "auth", "main"}
+	mysqlUsers   = []string{"app_user", "replicator", "admin", "root", "migration"}
+	mysqlTables  = []string{"users", "orders", "products", "sessions", "audit_log"}
+	mysqlColumns = []string{"id", "user_id", "email", "status", "created_at"}
+)
 
 func MySQLProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 	if rng == nil {
@@ -59,9 +61,9 @@ func mysqlInfoLogs(zipfIP ArgGenerator) []MessageTemplate {
 			Attrs:    []AttrGen{{"db.system", Static("mysql")}},
 		},
 		{
-			Severity: plog.SeverityNumberInfo,
-			Format:   "%s %d [Note] [MY-%s] [Server] Aborted connection %d to db: '%s' user: '%s' host: '%s' (Got timeout reading communication packets)",
-			Args:     []ArgGenerator{Timestamp(tsLayout), threadID, code, connID, db, user, zipfIP},
+			Severity:    plog.SeverityNumberInfo,
+			Format:      "%s %d [Note] [MY-%s] [Server] Aborted connection %d to db: '%s' user: '%s' host: '%s' (Got timeout reading communication packets)",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, connID, db, user, zipfIP},
 			AttrFromArg: map[string]int{"db.name": 4},
 			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.user", user}},
 		},
@@ -88,18 +90,18 @@ func mysqlDebugLogs(rng *rand.Rand) []MessageTemplate {
 			Attrs:    []AttrGen{{"db.system", Static("mysql")}},
 		},
 		{
-			Severity:     plog.SeverityNumberDebug,
-			Format:       "%s %d [Note] [MY-%s] [Server] Analyzing table '%s.%s': status OK",
-			Args:         []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table},
-			AttrFromArg:  map[string]int{"db.name": 3, "db.sql.table": 4},
-			Attrs:        []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("ANALYZE")}},
+			Severity:    plog.SeverityNumberDebug,
+			Format:      "%s %d [Note] [MY-%s] [Server] Analyzing table '%s.%s': status OK",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table},
+			AttrFromArg: map[string]int{"db.name": 3, "db.sql.table": 4},
+			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("ANALYZE")}},
 		},
 		{
-			Severity:     plog.SeverityNumberDebug,
-			Format:       "%s %d [Note] [MY-%s] [Server] EXPLAIN for query on %s.%s:\n%s",
-			Args:         []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table, SQLExplainPlan(600, 2500, rng)},
-			AttrFromArg:  map[string]int{"db.name": 3, "db.sql.table": 4},
-			Attrs:        []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
+			Severity:    plog.SeverityNumberDebug,
+			Format:      "%s %d [Note] [MY-%s] [Server] EXPLAIN for query on %s.%s:\n%s",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table, SQLExplainPlan(600, 2500, rng)},
+			AttrFromArg: map[string]int{"db.name": 3, "db.sql.table": 4},
+			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
 		},
 	}
 }
@@ -117,9 +119,9 @@ func mysqlWarnLogs(zipfIP ArgGenerator, rng *rand.Rand) []MessageTemplate {
 	duration := RandomInt(120, 300)
 	return []MessageTemplate{
 		{
-			Severity: plog.SeverityNumberWarn,
-			Format:   "%s %d [Warning] [MY-%s] [Server] Aborted connection %d to db: '%s' user: '%s' host: '%s' (Got an error reading communication packets)",
-			Args:     []ArgGenerator{Timestamp(tsLayout), threadID, code, connID, db, user, zipfIP},
+			Severity:    plog.SeverityNumberWarn,
+			Format:      "%s %d [Warning] [MY-%s] [Server] Aborted connection %d to db: '%s' user: '%s' host: '%s' (Got an error reading communication packets)",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, connID, db, user, zipfIP},
 			AttrFromArg: map[string]int{"db.name": 4},
 			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.user", user}},
 		},
@@ -130,11 +132,11 @@ func mysqlWarnLogs(zipfIP ArgGenerator, rng *rand.Rand) []MessageTemplate {
 			Attrs:    []AttrGen{{"db.system", Static("mysql")}},
 		},
 		{
-			Severity:     plog.SeverityNumberWarn,
-			Format:       "%s %d [Warning] [MY-%s] [Server] Slow query detected: %ds, rows_examined: %d, db: '%s', query: 'SELECT * FROM %s WHERE %s = %%s'",
-			Args:         []ArgGenerator{Timestamp(tsLayout), threadID, code, RandomInt(2, 30), RandomInt(1000, 100000), db, table, column},
-			AttrFromArg:  map[string]int{"db.name": 6, "db.sql.table": 7},
-			Attrs:        []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
+			Severity:    plog.SeverityNumberWarn,
+			Format:      "%s %d [Warning] [MY-%s] [Server] Slow query detected: %ds, rows_examined: %d, db: '%s', query: 'SELECT * FROM %s WHERE %s = %%s'",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, RandomInt(2, 30), RandomInt(1000, 100000), db, table, column},
+			AttrFromArg: map[string]int{"db.name": 6, "db.sql.table": 7},
+			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
 		},
 		{
 			Severity: plog.SeverityNumberError,
@@ -155,11 +157,11 @@ func mysqlWarnLogs(zipfIP ArgGenerator, rng *rand.Rand) []MessageTemplate {
 			Attrs:    []AttrGen{{"db.system", Static("mysql")}},
 		},
 		{
-			Severity:     plog.SeverityNumberError,
-			Format:       "%s %d [ERROR] [MY-%s] [Repl] Error 'Table '%s.%s' doesn't exist' on query.",
-			Args:         []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table},
-			AttrFromArg:  map[string]int{"db.name": 3, "db.sql.table": 4},
-			Attrs:        []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
+			Severity:    plog.SeverityNumberError,
+			Format:      "%s %d [ERROR] [MY-%s] [Repl] Error 'Table '%s.%s' doesn't exist' on query.",
+			Args:        []ArgGenerator{Timestamp(tsLayout), threadID, code, db, table},
+			AttrFromArg: map[string]int{"db.name": 3, "db.sql.table": 4},
+			Attrs:       []AttrGen{{"db.system", Static("mysql")}, {"db.operation.name", Static("SELECT")}},
 		},
 		{
 			Severity: plog.SeverityNumberError,

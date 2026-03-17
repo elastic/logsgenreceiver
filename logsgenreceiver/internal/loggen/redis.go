@@ -6,8 +6,10 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
-var redisVersions = []string{"7.2.4", "7.0.12", "6.2.6"}
-var redisEvictionPolicies = []string{"allkeys-lru", "volatile-lru", "noeviction"}
+var (
+	redisVersions         = []string{"7.2.4", "7.0.12", "6.2.6"}
+	redisEvictionPolicies = []string{"allkeys-lru", "volatile-lru", "noeviction"}
+)
 
 func RedisProfile(rng *rand.Rand, ipCfg *IPPoolConfig) *AppProfile {
 	if rng == nil {

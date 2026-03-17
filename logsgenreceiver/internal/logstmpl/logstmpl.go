@@ -100,9 +100,9 @@ func RenderLogResource(path string, id int, startTimeString string, vars map[str
 
 type resourceTemplateModel struct {
 	InstanceID        int
-	Vars             map[string]any
+	Vars              map[string]any
 	InstanceStartTime string
-	rand             *rand.Rand
+	rand              *rand.Rand
 }
 
 func (m *resourceTemplateModel) randByte() byte {
@@ -114,7 +114,7 @@ func (t *resourceTemplateModel) RandomIPv4() string {
 }
 
 func (t *resourceTemplateModel) RandomIPv6() string {
-	var buf = make([]byte, net.IPv6len)
+	buf := make([]byte, net.IPv6len)
 	t.rand.Read(buf)
 	return net.IP(buf).String()
 }
@@ -131,7 +131,7 @@ func (t *resourceTemplateModel) UUID() string {
 }
 
 func (t *resourceTemplateModel) RandomHex(n int) string {
-	var buf = make([]byte, n/2)
+	buf := make([]byte, n/2)
 	t.rand.Read(buf)
 	return hex.EncodeToString(buf)
 }

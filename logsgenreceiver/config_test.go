@@ -36,7 +36,8 @@ func TestLoadConfigWithProfile(t *testing.T) {
 	assert.NoError(t, xconfmap.Validate(cfg))
 	assert.Equal(t, "minimal", cfg.Profile)
 	assert.Empty(t, cfg.Scenarios)
-	effective := cfg.EffectiveScenarios()
+	effective, err := cfg.EffectiveScenarios()
+	require.NoError(t, err)
 	require.Len(t, effective, 1)
 	assert.Equal(t, "builtin/simple", effective[0].Path)
 	assert.Equal(t, 10, effective[0].Scale)
@@ -171,9 +172,16 @@ func TestValidateDiurnalProfile(t *testing.T) {
 		}), "must differ")
 	})
 
-	t.Run("empty profile gets defaults", func(t *testing.T) {
+	t.Run("empty profile passes validation without mutation", func(t *testing.T) {
 		cfg := &DiurnalProfileCfg{PeakHour: 0, TroughHour: 0}
 		require.NoError(t, validateDiurnalProfile(cfg))
+		assert.Equal(t, 0, cfg.PeakHour, "validate must not mutate PeakHour")
+		assert.Equal(t, 0, cfg.TroughHour, "validate must not mutate TroughHour")
+	})
+
+	t.Run("applyDiurnalDefaults sets defaults", func(t *testing.T) {
+		cfg := &DiurnalProfileCfg{PeakHour: 0, TroughHour: 0}
+		applyDiurnalDefaults(cfg)
 		assert.Equal(t, 14, cfg.PeakHour)
 		assert.Equal(t, 4, cfg.TroughHour)
 		assert.Equal(t, 3.0, cfg.PeakMultiplier)
@@ -227,7 +235,8 @@ func TestValidateProfileAndScenarios(t *testing.T) {
 func TestEffectiveScenarios(t *testing.T) {
 	t.Run("returns inline scenarios when profile empty", func(t *testing.T) {
 		cfg := validBaseConfig()
-		effective := cfg.EffectiveScenarios()
+		effective, err := cfg.EffectiveScenarios()
+		require.NoError(t, err)
 		require.Len(t, effective, 1)
 		assert.Equal(t, "builtin/simple", effective[0].Path)
 	})
@@ -237,7 +246,8 @@ func TestEffectiveScenarios(t *testing.T) {
 		cfg.Scenarios = nil
 		cfg.Profile = "minimal"
 		require.NoError(t, cfg.Validate())
-		effective := cfg.EffectiveScenarios()
+		effective, err := cfg.EffectiveScenarios()
+		require.NoError(t, err)
 		require.Len(t, effective, 1)
 		assert.Equal(t, "builtin/simple", effective[0].Path)
 		assert.Equal(t, 10, effective[0].Scale)

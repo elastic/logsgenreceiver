@@ -129,8 +129,11 @@ func (cfg *Config) Validate() error {
 	}
 
 	if hasProfile {
-		prof, ok := getBuiltinProfile(cfg.Profile)
-		if !ok {
+		prof, err := getBuiltinProfile(cfg.Profile)
+		if err != nil {
+			return fmt.Errorf("profile %q: %w", cfg.Profile, err)
+		}
+		if prof == nil {
 			return fmt.Errorf("unknown profile %q", cfg.Profile)
 		}
 		if len(prof.Scenarios) == 0 {
@@ -143,15 +146,20 @@ func (cfg *Config) Validate() error {
 }
 
 // EffectiveScenarios returns the scenarios to use: either from the selected built-in profile or from Config.Scenarios.
-// Call after Validate() so the selected profile is guaranteed to exist when Profile is set.
-func (cfg *Config) EffectiveScenarios() []ScenarioCfg {
+// Must be called after a successful Validate() so the selected profile is guaranteed to exist.
+func (cfg *Config) EffectiveScenarios() ([]ScenarioCfg, error) {
 	if cfg.Profile != "" {
-		if prof, ok := getBuiltinProfile(cfg.Profile); ok {
-			return prof.Scenarios
+		prof, err := getBuiltinProfile(cfg.Profile)
+		if err != nil {
+			return nil, fmt.Errorf("loading profile %q: %w", cfg.Profile, err)
 		}
+		if prof == nil {
+			return nil, fmt.Errorf("unknown profile %q", cfg.Profile)
+		}
+		return prof.Scenarios, nil
 	}
 
-	return cfg.Scenarios
+	return cfg.Scenarios, nil
 }
 
 func validateScenarios(scenarios []ScenarioCfg) error {
@@ -241,28 +249,40 @@ func validateIPPool(ip *IPPoolCfg) error {
 	return nil
 }
 
-func validateDiurnalProfile(dp *DiurnalProfileCfg) error {
+func applyDiurnalDefaults(dp *DiurnalProfileCfg) {
 	if dp == nil {
-		return nil
+		return
 	}
 	if dp.PeakHour == 0 && dp.TroughHour == 0 {
 		dp.PeakHour = 14
 		dp.TroughHour = 4
-	}
-	if dp.PeakHour < 0 || dp.PeakHour > 23 {
-		return fmt.Errorf("diurnal_profile: peak_hour must be 0-23 (got %d)", dp.PeakHour)
-	}
-	if dp.TroughHour < 0 || dp.TroughHour > 23 {
-		return fmt.Errorf("diurnal_profile: trough_hour must be 0-23 (got %d)", dp.TroughHour)
-	}
-	if dp.PeakHour == dp.TroughHour {
-		return fmt.Errorf("diurnal_profile: peak_hour and trough_hour must differ")
 	}
 	if dp.PeakMultiplier <= 0 {
 		dp.PeakMultiplier = 3.0
 	}
 	if dp.TroughMultiplier <= 0 {
 		dp.TroughMultiplier = 0.2
+	}
+}
+
+func validateDiurnalProfile(dp *DiurnalProfileCfg) error {
+	if dp == nil {
+		return nil
+	}
+	peakHour := dp.PeakHour
+	troughHour := dp.TroughHour
+	if peakHour == 0 && troughHour == 0 {
+		peakHour = 14
+		troughHour = 4
+	}
+	if peakHour < 0 || peakHour > 23 {
+		return fmt.Errorf("diurnal_profile: peak_hour must be 0-23 (got %d)", peakHour)
+	}
+	if troughHour < 0 || troughHour > 23 {
+		return fmt.Errorf("diurnal_profile: trough_hour must be 0-23 (got %d)", troughHour)
+	}
+	if peakHour == troughHour {
+		return fmt.Errorf("diurnal_profile: peak_hour and trough_hour must differ")
 	}
 	for i, cb := range dp.CronBursts {
 		if cb.Interval <= 0 {

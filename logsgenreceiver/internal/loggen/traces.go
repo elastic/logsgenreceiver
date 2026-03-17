@@ -11,10 +11,12 @@ var goStackPackages = []string{
 	"github.com/gin-gonic/gin", "go.opentelemetry.io/otel", "internal/handler",
 	"server", "db", "cache", "worker", "grpc/client",
 }
+
 var goStackFiles = []string{
 	"handler.go", "server.go", "main.go", "query.go", "connection.go",
 	"client.go", "processor.go", "middleware.go", "router.go", "context.go",
 }
+
 var goStackFuncs = []string{
 	"(*Handler).ServeHTTP", "(*Server).ListenAndServe", "main.main",
 	"(*DB).Query", "(*Conn).Exec", "(*Client).Call", "(*Processor).Run",
@@ -66,14 +68,17 @@ var javaStackPackages = []string{
 	"com.example.service", "com.example.controller", "org.springframework",
 	"java.util", "java.lang", "io.netty", "org.hibernate", "com.fasterxml.jackson",
 }
+
 var javaStackClasses = []string{
 	"UserService", "OrderController", "RestTemplate", "HttpClient",
 	"TransactionManager", "EntityManager", "ObjectMapper", "HandlerAdapter",
 }
+
 var javaStackMethods = []string{
 	"getUser", "handle", "execute", "process", "invoke", "doFilter",
 	"findById", "save", "serialize", "deserialize",
 }
+
 var javaStackFiles = []string{
 	"userservice", "ordercontroller", "resttemplate", "httpclient",
 	"transactionmanager", "entitymanager", "objectmapper", "handleradapter",

@@ -494,7 +494,7 @@ func RandomPathWithSuffix(bases []string, suffixGen ArgGenerator) ArgGenerator {
 // routeWithTemplate holds a full URL for the log body and the route template for http.url attribute.
 // Implements fmt.Stringer to render the body when used in format strings.
 type routeWithTemplate struct {
-	body    string
+	body     string
 	template string
 }
 
@@ -676,6 +676,3 @@ func SliceAttr(elemGen ArgGenerator, minLen, maxLen int) ArgGenerator {
 		return out
 	}
 }
-
-
-
