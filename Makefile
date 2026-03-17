@@ -30,7 +30,7 @@ test:
 
 .PHONY: bench
 bench:
-	cd $(MODULE_DIR) && go test -run=^$$ -bench=BenchmarkLogsGenReceiver -benchtime=1x -timeout=10m -v .
+	cd $(MODULE_DIR) && go test -run=^$$ -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=10 -timeout=10m -v .
 
 .PHONY: tidy
 tidy:
