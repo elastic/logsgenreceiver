@@ -13,3 +13,6 @@ otelcol.dev.yaml
 # Editor / IDE
 .cursor/
 .vscode/
+
+# Git worktrees
+.worktrees/
