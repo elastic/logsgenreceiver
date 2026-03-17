@@ -42,7 +42,7 @@ jobs:
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
           cd logsgenreceiver
-          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=5 -timeout=10m . \
+          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=10 -timeout=10m . \
             | tee ../bench-base.txt
 
       - name: Save base benchmark to cache
@@ -58,7 +58,7 @@ jobs:
       - name: Benchmark PR HEAD
         run: |
           cd logsgenreceiver
-          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=5 -timeout=10m . \
+          go test -run='^$' -bench=BenchmarkLogsGenReceiver -benchtime=1x -count=10 -timeout=10m . \
             | tee ../bench-head.txt
 
       - name: Build comment body
