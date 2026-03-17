@@ -121,7 +121,7 @@ func (t *resourceTemplateModel) RandomIPv6() string {
 
 func (t *resourceTemplateModel) RandomMAC() string {
 	var mac net.HardwareAddr
-	mac = append(mac, t.randByte()|2, t.randByte(), t.randByte(), t.randByte(), t.randByte())
+	mac = append(mac, t.randByte()|2, t.randByte(), t.randByte(), t.randByte(), t.randByte(), t.randByte())
 	return mac.String()
 }
 

@@ -3,8 +3,10 @@ package logstmpl
 import (
 	"encoding/json"
 	"math/rand"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +15,18 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
+
+func TestRandomMAC_ValidFormat(t *testing.T) {
+	model := &resourceTemplateModel{rand: rand.New(rand.NewSource(42))}
+	for i := range 20 {
+		mac := model.RandomMAC()
+		hw, err := net.ParseMAC(mac)
+		require.NoError(t, err, "iteration %d: %q is not a valid MAC", i, mac)
+		assert.Len(t, hw, 6, "iteration %d: MAC must be 6 bytes, got %d", i, len(hw))
+		assert.True(t, hw[0]&2 != 0, "iteration %d: first byte must have locally-administered bit set", i)
+		assert.Equal(t, 5, strings.Count(mac, ":"), "iteration %d: MAC must have 5 colons (6 groups)", i)
+	}
+}
 
 func TestRenderLogsTemplate_Builtin(t *testing.T) {
 	builtins := []string{
