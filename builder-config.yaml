@@ -23,6 +23,10 @@ receivers:
     import: github.com/elastic/logsgenreceiver/logsgenreceiver
     name: 'logsgenreceiver'
     path: 'logsgenreceiver'
+  - gomod: github.com/elastic/logsgenreceiver/logsgenreceiver/filereplayreceiver v0.139.0
+    import: github.com/elastic/logsgenreceiver/logsgenreceiver/filereplayreceiver
+    name: 'filereplayreceiver'
+    path: 'logsgenreceiver'
 
 extensions:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.139.0
