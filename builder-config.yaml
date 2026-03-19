@@ -23,7 +23,7 @@ receivers:
     import: github.com/elastic/logsgenreceiver/logsgenreceiver
     name: 'logsgenreceiver'
     path: 'logsgenreceiver'
-  - gomod: github.com/elastic/logsgenreceiver/logsgenreceiver/filereplayreceiver v0.139.0
+  - gomod: github.com/elastic/logsgenreceiver/logsgenreceiver v0.139.0
     import: github.com/elastic/logsgenreceiver/logsgenreceiver/filereplayreceiver
     name: 'filereplayreceiver'
     path: 'logsgenreceiver'
