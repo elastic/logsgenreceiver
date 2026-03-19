@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/klauspost/compress v1.18.1
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/collector/component v1.40.0
 	go.opentelemetry.io/collector/component/componentstatus v0.134.0

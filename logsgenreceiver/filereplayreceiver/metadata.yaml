@@ -1,0 +1,9 @@
+type: filereplay
+
+status:
+  class: receiver
+  stability:
+    development: [logs]
+  distributions: []
+  codeowners:
+    active: [alexsapran]
