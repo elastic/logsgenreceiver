@@ -1,3 +1,14 @@
+# logsgenreceiver
+
+This repository contains two OpenTelemetry Collector receivers for benchmarking log ingest pipelines:
+
+| Receiver | Description |
+|---|---|
+| [`logsgen`](#log-generation-receiver) | Generates synthetic log data with configurable profiles, scale, and volume shaping |
+| [`filereplay`](logsgenreceiver/filereplayreceiver/README.md) | Replays a pre-generated OTLP JSON NDJSON file as fast as possible |
+
+---
+
 # Log generation receiver
 
 | Status        |                          |
