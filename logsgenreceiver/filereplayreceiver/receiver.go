@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/klauspost/compress/zstd"
 	"go.opentelemetry.io/collector/component"
@@ -26,6 +28,11 @@ type fileReplayReceiver struct {
 	host     component.Host
 	cancel   context.CancelFunc
 	done     chan struct{}
+
+	// progress counters — updated atomically on the hot path
+	linesRead atomic.Uint64
+	logsRead  atomic.Uint64
+	startTime time.Time
 }
 
 func (r *fileReplayReceiver) Start(ctx context.Context, host component.Host) error {
@@ -53,6 +60,9 @@ func (r *fileReplayReceiver) run(ctx context.Context) {
 		return
 	}
 
+	r.startTime = time.Now()
+	go r.logProgress(ctx)
+
 	workers := r.cfg.Workers
 	if workers <= 1 {
 		r.runSingle(ctx, files)
@@ -61,8 +71,41 @@ func (r *fileReplayReceiver) run(ctx context.Context) {
 	}
 
 	if ctx.Err() == nil {
+		r.logSummary()
 		r.reportDone()
 	}
+}
+
+// logProgress emits a progress line every 10 s until ctx is cancelled.
+func (r *fileReplayReceiver) logProgress(ctx context.Context) {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			elapsed := time.Since(r.startTime).Seconds()
+			logs := r.logsRead.Load()
+			r.settings.Logger.Info("filereplay progress",
+				zap.Uint64("lines_read", r.linesRead.Load()),
+				zap.Uint64("logs_read", logs),
+				zap.Float64("logs_per_second", float64(logs)/elapsed),
+				zap.String("elapsed", time.Since(r.startTime).Round(time.Millisecond).String()),
+			)
+		}
+	}
+}
+
+func (r *fileReplayReceiver) logSummary() {
+	elapsed := time.Since(r.startTime)
+	logs := r.logsRead.Load()
+	r.settings.Logger.Info("filereplay finished",
+		zap.Uint64("lines_read", r.linesRead.Load()),
+		zap.Uint64("logs_read", logs),
+		zap.Float64("logs_per_second", float64(logs)/elapsed.Seconds()),
+		zap.String("duration", elapsed.Round(time.Millisecond).String()),
+	)
 }
 
 // runSingle: tight loop, no channel
@@ -81,6 +124,8 @@ func (r *fileReplayReceiver) runSingle(ctx context.Context, files []string) {
 			if err := r.nextLogs.ConsumeLogs(ctx, logs); err != nil {
 				r.settings.Logger.Warn("consume error", zap.Error(err))
 			}
+			r.linesRead.Add(1)
+			r.logsRead.Add(uint64(logs.LogRecordCount()))
 		}); err != nil {
 			r.settings.Logger.Error("file read error", zap.String("path", path), zap.Error(err))
 		}
@@ -105,6 +150,8 @@ func (r *fileReplayReceiver) runParallel(ctx context.Context, files []string, n 
 				if err := r.nextLogs.ConsumeLogs(ctx, logs); err != nil {
 					r.settings.Logger.Warn("consume error", zap.Error(err))
 				}
+				r.linesRead.Add(1)
+				r.logsRead.Add(uint64(logs.LogRecordCount()))
 			}
 		}()
 	}
