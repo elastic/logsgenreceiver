@@ -1,0 +1,115 @@
+## Step 1: generate the demo dataset
+## Produces demo-logs.jsonl (~1M logs, ~30 min of the medium cluster scenario)
+## Run: ./logsgen-dev/logsgen --config demo-gen.yaml
+
+receivers:
+  logsgen:
+    start_time: "2025-01-01T00:00:00Z"
+    end_time:   "2025-01-01T00:30:00Z"   # 30 min → ~9.4M logs/6h * 0.5h ≈ ~470k logs
+    interval: 10s
+    real_time: false
+    exit_after_end: true
+    seed: 42
+    scenarios:
+      - path: builtin/k8s-nginx
+        scale: 120
+        logs_per_interval: 20
+        concurrency: 4
+        instance_volume_skew: 1.5
+        template_vars:
+          nodes: 30
+          pods_per_node: 4
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 30
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+
+      - path: builtin/k8s-mysql
+        scale: 20
+        logs_per_interval: 6
+        concurrency: 1
+        template_vars:
+          nodes: 10
+          pods_per_node: 2
+        instance_volume_skew: 1.2
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+
+      - path: builtin/k8s-redis
+        scale: 50
+        logs_per_interval: 8
+        instance_volume_skew: 1.02
+        concurrency: 2
+        template_vars:
+          nodes: 10
+
+      - path: builtin/k8s-goapp
+        scale: 54
+        logs_per_interval: 10
+        concurrency: 6
+        emit_trace_context: false
+        template_vars:
+          nodes: 27
+          pods_per_node: 2
+        instance_volume_skew: 1.8
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+
+      - path: builtin/k8s-proxy
+        scale: 54
+        logs_per_interval: 40
+        concurrency: 6
+        emit_trace_context: true
+        instance_volume_skew: 1.9
+        volume_profile:
+          burst_probability: 0.3
+          burst_multiplier_min: 2.0
+          burst_multiplier_max: 10.0
+          burst_duration_min: 8
+          burst_duration_max: 24
+          quiet_probability: 0.03
+          quiet_multiplier: 0.2
+          quiet_duration_min: 8
+          quiet_duration_max: 24
+        template_vars:
+          nodes: 18
+          pods_per_node: 3
+
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 1s
+
+exporters:
+  file:
+    path: ./demo-logs.jsonl
+    format: json
+
+service:
+  pipelines:
+    logs:
+      receivers: [logsgen]
+      processors: [batch]
+      exporters: [file]

@@ -1,0 +1,24 @@
+## Step 2: replay the demo dataset as fast as possible
+## Measures raw pipeline throughput with zero exporter overhead
+## Run: ./logsgen-dev/logsgen --config demo-replay.yaml
+
+receivers:
+  filereplay:
+    path: ./demo-logs.jsonl   # or demo-logs.jsonl.zst if compressed
+    workers: 1                # increase to 2/4 to test parallel unmarshaling
+    scan_buffer_bytes: 67108864  # 64MB — needed for large batches from file exporter
+
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 200ms
+
+exporters:
+  nop:
+
+service:
+  pipelines:
+    logs:
+      receivers: [filereplay]
+      processors: [batch]
+      exporters: [nop]
