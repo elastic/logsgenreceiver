@@ -121,9 +121,7 @@ func (r *fileReplayReceiver) runSingle(ctx context.Context, files []string) {
 				r.settings.Logger.Warn("unmarshal error", zap.Error(err))
 				return
 			}
-			if err := r.nextLogs.ConsumeLogs(ctx, logs); err != nil {
-				r.settings.Logger.Warn("consume error", zap.Error(err))
-			}
+			r.emit(ctx, logs)
 			r.linesRead.Add(1)
 			r.logsRead.Add(uint64(logs.LogRecordCount()))
 		}); err != nil {
@@ -147,9 +145,7 @@ func (r *fileReplayReceiver) runParallel(ctx context.Context, files []string, n 
 					r.settings.Logger.Warn("unmarshal error", zap.Error(err))
 					continue
 				}
-				if err := r.nextLogs.ConsumeLogs(ctx, logs); err != nil {
-					r.settings.Logger.Warn("consume error", zap.Error(err))
-				}
+				r.emit(ctx, logs)
 				r.linesRead.Add(1)
 				r.logsRead.Add(uint64(logs.LogRecordCount()))
 			}
@@ -199,6 +195,46 @@ func (r *fileReplayReceiver) readFile(ctx context.Context, path string, fn func(
 		fn(scanner.Bytes())
 	}
 	return scanner.Err()
+}
+
+// emit forwards logs to the next consumer, splitting according to cfg.SplitBy.
+func (r *fileReplayReceiver) emit(ctx context.Context, logs plog.Logs) {
+	switch r.cfg.SplitBy {
+	case SplitByResourceLogs:
+		rls := logs.ResourceLogs()
+		for i := 0; i < rls.Len(); i++ {
+			slice := plog.NewLogs()
+			rls.At(i).CopyTo(slice.ResourceLogs().AppendEmpty())
+			if err := r.nextLogs.ConsumeLogs(ctx, slice); err != nil {
+				r.settings.Logger.Warn("consume error", zap.Error(err))
+			}
+		}
+	case SplitByLogRecord:
+		rls := logs.ResourceLogs()
+		for i := 0; i < rls.Len(); i++ {
+			rl := rls.At(i)
+			sls := rl.ScopeLogs()
+			for j := 0; j < sls.Len(); j++ {
+				sl := sls.At(j)
+				lrs := sl.LogRecords()
+				for k := 0; k < lrs.Len(); k++ {
+					slice := plog.NewLogs()
+					newRL := slice.ResourceLogs().AppendEmpty()
+					rl.Resource().CopyTo(newRL.Resource())
+					newSL := newRL.ScopeLogs().AppendEmpty()
+					sl.Scope().CopyTo(newSL.Scope())
+					lrs.At(k).CopyTo(newSL.LogRecords().AppendEmpty())
+					if err := r.nextLogs.ConsumeLogs(ctx, slice); err != nil {
+						r.settings.Logger.Warn("consume error", zap.Error(err))
+					}
+				}
+			}
+		}
+	default: // SplitByLine
+		if err := r.nextLogs.ConsumeLogs(ctx, logs); err != nil {
+			r.settings.Logger.Warn("consume error", zap.Error(err))
+		}
+	}
 }
 
 func (r *fileReplayReceiver) reportDone() {
